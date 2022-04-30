@@ -9,6 +9,8 @@
      - add button in the GUI to take in gcode file instead of 
         svg if he already has one read
      - add stop/resume buttons in the GUI for if machine fuck up
+        (add listeners that change global vars somewhere maybe? 
+        and then check gvar value between each serial cmnd)
 '''
 
 # this is the same thing as FINALCODE.py but the dialog that pops up
@@ -85,19 +87,39 @@ def modify():
     gcode_compiler.append_curves(curves) 
     gcode_compiler.compile_to_file(ext + output_name, passes=1)
 
-    # gcode_file = open(ext + output_name, 'r+')
-    # gcode_contents = gcode_file.read()
-    # gcode_file.close()
-    # gcode_file = open(ext + output_name, 'a')
+    gcode_file = open(ext + output_name, 'r+')
+    gcode_contents = gcode_file.read()
+    gcode_file.close()
+    gcode_file = open(ext + output_name, 'w')
 
-    # # if there's code to insert at the beginning of each loop, can replace the \n in the else statement with code
+    # change spindle commands to Z-axis movement
+    plorb = gcode_file.split('\n')
+    outfile = ''
+    for glemp in plorb:
+        # spindle is M3 or M4 or M5
+        # or M03 M04 M05
+        if glemp.split(' ')[0] == 'M3':
+            # replace with Z-down
+            pass
+        elif glemp.split(' ')[0] == 'M4':
+            # replace with Z-up
+            pass
+        elif glemp.split(' ')[0] == 'M5':
+            # replace with Z-up
+            pass
+        else:
+            outfile += glemp + '\n'
 
-    # # gcode_contents = '\n'.join([(x if x != 'G90;' else '\n') for x in gcode_contents.split('\n')])
-    # # for i in range(nsv - 1):
-    # #     # gcode_file.write('\n')
-    # #     gcode_file.write(gcode_contents)
+    gcode_file.write(outfile)
+    gcode_file.close()
+
+    # if there's code to insert at the beginning of each loop, can replace the \n in the else statement with code
+
+    # gcode_contents = '\n'.join([(x if x != 'G90;' else '\n') for x in gcode_contents.split('\n')])
+    # for i in range(nsv - 1):
+    #     # gcode_file.write('\n')
+    #     gcode_file.write(gcode_contents)
         
-    # gcode_file.close()
 
     progress.configure(text='Saved to ' + output_name)
     do_signage((ext + output_name))
@@ -130,10 +152,19 @@ def do_signage(gfile):
     ser.reset_input_buffer()
 
     with open(gfile) as f:
-        for i in range(nsv - 1):
+        for i in range(nsv):
             for line in f:
                 ser.write((line + '\n').encode('ascii'))
+                # maybe need a delay here to wait for the 
+                # machine to move
+
+            # im not sure if we need the ~ and ! commands
+            # if it's not being sent any commands while
+            # the stepper code is running anyway
+            
+            ser.write(b'!') # pause to run stepper code
             # run stepper code here
+            ser.write(b'~') # resume
 
 
 # --------------------------------------
