@@ -2,8 +2,6 @@
     TODO
      - check what stepper driver / motor combo we have and 
         write stepper code after each signature thing
-     - add code to modify() method to change spindle on/off
-        commands to Z axis movement 
      - add button in the GUI to start signing instead of 
         just going automatically
      - add button in the GUI to take in gcode file instead of 
@@ -37,6 +35,9 @@ fpath = ''
 # number of signatures to print
 nsv = 1
 
+# distance to move pen to toggle writing/not writing
+z_amt = 5
+
 # contents of the file as a string
 fcontents = 'why am i doing it like this?'
 
@@ -48,7 +49,7 @@ fcontents = 'why am i doing it like this?'
 
 # svg >> gcode
 def modify():
-    global nsv, fpath
+    global nsv, fpath, z_amt
     ext = ''
     tmp = []
     if os.name == 'nt': # windows
@@ -100,29 +101,26 @@ def modify():
         # or M03 M04 M05
         if glemp.split(' ')[0] == 'M3':
             # replace with Z-down
+            outfile += 'G91 G0 Z' + str(z_amt) + '\n'
             pass
         elif glemp.split(' ')[0] == 'M4':
             # replace with Z-up
+            outfile += 'G91 G0 Z-' + str(z_amt) + '\n'
             pass
         elif glemp.split(' ')[0] == 'M5':
             # replace with Z-up
+            outfile += 'G91 G0 Z-' + str(z_amt) + '\n'
             pass
         else:
             outfile += glemp + '\n'
 
     gcode_file.write(outfile)
     gcode_file.close()
-
-    # if there's code to insert at the beginning of each loop, can replace the \n in the else statement with code
-
-    # gcode_contents = '\n'.join([(x if x != 'G90;' else '\n') for x in gcode_contents.split('\n')])
-    # for i in range(nsv - 1):
-    #     # gcode_file.write('\n')
-    #     gcode_file.write(gcode_contents)
         
 
     progress.configure(text='Saved to ' + output_name)
-    do_signage((ext + output_name))
+    # do not run it automatically immediately after finishing conversion
+    # do_signage((ext + output_name))
 
 
 
@@ -171,10 +169,11 @@ def do_signage(gfile):
 # GRAPHICS
 
 '''
-    selected file: ______________  |browse|
-    output filename: ____________
-    # of signatures: _______
-    |begin|       Progress: loading file/modifying file/done
+    selected file:      ______________      |browse|
+    output filename:    ______________
+    # of signatures:    ______________
+                        |begin|             Progress: loading file/modifying file/done
+    Set pen height:     ______________
     |quit|
 '''
 #region graphics stuff
@@ -182,10 +181,10 @@ selected_file = Label(window, text='Selected file:')
 selected_file_display = Text(window, height=1, width=60)
 browse_files = Button(window, text='browse files', command=file_explorer)
 output_label = Label(window, text='Output filename:')
-output_input_var = StringVar()
+output_input_var = StringVar(value='output.gcode')
 output_input = Entry(window, textvariable=output_input_var, width=60)
 num_sigs = Label(window, text='# of copies: ')
-num_sigs_var = StringVar()
+num_sigs_var = StringVar(value='1')
 enter_num_sigs = Entry(window, textvariable=num_sigs_var, width=66)
 start = Button(window, text='Begin', command=modify)
 progress = Label(window, text='Progress:\tNot Started')
