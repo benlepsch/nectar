@@ -42,7 +42,11 @@ g.output(dir2, CW)
 
 # also run homing cycle
 s = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+sleep(1)
+s.write(b'$X\n')
+sleep(0.5)
 s.write(b'$H\n')
+sleep(2)
 
 for x in range(step_count):
     g.output(step1, g.HIGH)
@@ -63,3 +67,5 @@ for x in range(step_count):
     g.output(step1, g.LOW)
     g.output(step2, g.LOW)
     sleep(delay)
+
+g.cleanup()
