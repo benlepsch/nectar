@@ -1,14 +1,34 @@
-# this program will control the stepper motor or whatever 
-# is connected directly to the pi
+import RPi.GPIO as GPIO
+from RpiMotorLib import RpiMotorLib
+import time
 
-import RPi.GPIO as gpio
+#define GPIO pins
+direction= 22 # Direction (DIR) GPIO Pin
+step = 23 # Step GPIO Pin
+EN_pin = 24 # enable pin (LOW to enable)
 
-gpio.setmode(gpio.BCM) # uses labeled pins on the pi ribbon cable connector
+# Declare a instance of class pass GPIO pins numbers and the motor type
+mymotortest = RpiMotorLib.A4988Nema(direction, step, (21,21,21), "DRV8825")
+GPIO.setup(EN_pin,GPIO.OUT) # set enable pin as output
 
-'''
-# to setup / control pins do like this
+###########################
+# Actual motor control
+###########################
+#
 
-led_pin = 17
-gpio.setup(led_pin, gpio.OUT)
-gpio.output(led_pin, True)
-'''
+GPIO.output(EN_pin,GPIO.LOW) # pull enable to low to enable motor
+
+# see comments below for what each parameter does
+mymotortest.motor_go(False, 'Full', 20, .0005, False, .05)
+time.sleep(1)
+
+# for ii in range(10):
+#     mymotortest.motor_go(dir_array[ii%2], # False=Clockwise, True=Counterclockwise
+#                          "Full" , # Step type (Full,Half,1/4,1/8,1/16,1/32)
+#                          200, # number of steps
+#                          .0005, # step delay [sec]
+#                          False, # True = print verbose output 
+#                          .05) # initial delay [sec]
+#     time.sleep(1)
+
+GPIO.cleanup()

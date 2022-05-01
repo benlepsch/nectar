@@ -243,8 +243,8 @@ start_sign = Button(window, text='Start', command=do_signage)
     output filename:    ______________
     # of signatures:    ______________
                         |begin|             Progress: loading file/modifying file/done
-    Set pen height:     ______________
-    |Home machine|      |Estop|             |cycle start|
+    Set pen height:                         |Home machine|
+    ______________      |Estop|             |cycle start|
     |Card feed forward| |C.F. backward|     |cycle stop|
     |quit|              |start signing|
 '''
@@ -259,8 +259,8 @@ enter_num_sigs.grid(row=2, column=1)
 start.grid(row=3, column=1)
 progress.grid(row=3, column=2)
 set_pen_height.grid(row=4, column=0)
-sph_input.grid(row=4,column=1)
-home_button.grid(row=5,column=0)
+sph_input.grid(row=5,column=0)
+home_button.grid(row=4,column=2)
 e_stop.grid(row=5,column=1)
 cf_forward.grid(row=6,column=0)
 cf_backward.grid(row=6,column=1)
