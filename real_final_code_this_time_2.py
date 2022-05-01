@@ -22,7 +22,7 @@ import os, sys, serial, time
 import RPi.GPIO as g
 from RpiMotorLib import RpiMotorLib
 
-g.setmode(g.BCM)
+g.setmode(g.BOARD)
 
 window = Tk()
 window.title('SVG to Gcode convertir')
@@ -243,9 +243,10 @@ start_sign = Button(window, text='Start', command=do_signage)
     # of signatures:    ______________
                         |begin|             Progress: loading file/modifying file/done
     Set pen height:                         |Home machine|
-    ______________      |Estop|             |cycle start|
-    |Card feed forward| |C.F. backward|     |cycle stop|
-    |quit|              |start signing|
+    ______________      |Card feed forward| |cycle start|
+                        |C.F. backward|     |cycle stop|
+    |start signing|
+    |estop|
 '''
 
 selected_file.grid(row=0, column=0)
