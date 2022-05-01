@@ -1,14 +1,9 @@
 '''
     TODO
-     - check what stepper driver / motor combo we have and 
-        write stepper code after each signature thing
-     - add button in the GUI to start signing instead of 
-        just going automatically
      - add button in the GUI to take in gcode file instead of 
         svg if he already has one read
-     - add stop/resume buttons in the GUI for if machine fuck up
-        (add listeners that change global vars somewhere maybe? 
-        and then check gvar value between each serial cmnd)
+     - add load gcode file option to GUI
+     - add stepper code outline
 '''
 
 # this is the same thing as FINALCODE.py but the dialog that pops up
@@ -154,6 +149,7 @@ def do_signage():
     # TODO: read in gfile from StringVar
     gfile = ''
     ser = serial.Serial('dev/ttyACM0', 115200, timeout=1)
+    time.sleep(1)
     ser.reset_input_buffer()
 
     with open(gfile) as f:
@@ -174,9 +170,9 @@ def do_signage():
             # if it's not being sent any commands while
             # the stepper code is running anyway
             if not cst2:
-                ser.write(b'!') # pause to run stepper code
+                ser.write(b'!\n') # pause to run stepper code
                 # run stepper code here
-                ser.write(b'~') # resume
+                ser.write(b'~\n') # resume
             else: 
                 cst2 = False
 
