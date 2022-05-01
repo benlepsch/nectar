@@ -18,7 +18,7 @@ from tkinter import *
 from tkinter import filedialog
 from svg_to_gcode.svg_parser import parse_file
 from svg_to_gcode.compiler import Compiler, interfaces
-import os, sys, serial
+import os, sys, serial, time
 import RPi.GPIO as g
 from RpiMotorLib import RpiMotorLib
 
@@ -120,6 +120,7 @@ def modify():
 
     progress.configure(text='Saved to ' + output_name)
     # do not run it automatically immediately after finishing conversion
+    # TODO: add something here to be like automatically load in gcode file to other thing
     # do_signage((ext + output_name))
 
 
@@ -144,8 +145,14 @@ def file_explorer():
 
 # --------------------------------------
 # CONTORL ARDUINO
-
-def do_signage(gfile):
+ser = ''
+pause = False
+cst = False
+cst2 = False
+def do_signage():
+    global ser, pause, cst, cst2
+    # TODO: read in gfile from StringVar
+    gfile = ''
     ser = serial.Serial('dev/ttyACM0', 115200, timeout=1)
     ser.reset_input_buffer()
 
@@ -155,26 +162,39 @@ def do_signage(gfile):
                 ser.write((line + '\n').encode('ascii'))
                 # maybe need a delay here to wait for the 
                 # machine to move
+                if cst:
+                    break
+            while (pause):
+                if cst:
+                    cst = False
+                if cst2:
+                    pause = False
 
             # im not sure if we need the ~ and ! commands
             # if it's not being sent any commands while
             # the stepper code is running anyway
-            
-            ser.write(b'!') # pause to run stepper code
-            # run stepper code here
-            ser.write(b'~') # resume
+            if not cst2:
+                ser.write(b'!') # pause to run stepper code
+                # run stepper code here
+                ser.write(b'~') # resume
+            else: 
+                cst2 = False
+
 
 
 # --------------------------------------
 # GRAPHICS
 
-'''
+''' GUI outline
+
     selected file:      ______________      |browse|
     output filename:    ______________
     # of signatures:    ______________
                         |begin|             Progress: loading file/modifying file/done
     Set pen height:     ______________
-    |quit|
+    |Home machine|      |Estop|             |cycle start|
+    |Card feed forward| |C.F. backward|     |cycle stop|
+    |quit|              |start signing|
 '''
 #region graphics stuff
 selected_file = Label(window, text='Selected file:')
@@ -189,6 +209,42 @@ enter_num_sigs = Entry(window, textvariable=num_sigs_var, width=66)
 start = Button(window, text='Begin', command=modify)
 progress = Label(window, text='Progress:\tNot Started')
 kwit = Button(window, text='Exit', command=window.destroy)
+set_pen_height = Label(window, text='Set pen height (mm):')
+
+sph_amt = StringVar(value='5')
+sph_input = Entry(window, textvariable=sph_amt, width=20)
+
+def homeit():
+    ser.write(b'$H\n')
+
+def estopit():
+    ser.write(b'M112\n')
+
+# TODO: add these these commands
+def cffit():
+    pass
+
+def cfbit():
+    pass
+
+def cyclestartit():
+    global cst2
+    cst2 = True
+
+def cyclestopit():
+    global cst, pause
+    cst = True
+    pause = True
+
+home_button = Button(window, text='Home machine', command=homeit)
+e_stop = Button(window, text='Emergency Stop', command=estopit)
+cf_forward = Button(window, text='Card feeder forwards', command=cffit)
+cf_backward = Button(window, text='Card feeder backwards', command=cfbit)
+cycle_start = Button(window, text='Start cycle', command=cyclestartit)
+cycle_stop = Button(window, text='Stop cycle', command=cyclestopit)
+
+start_sign = Button(window, text='Start', command=do_signage)
+
 
 selected_file.grid(row=0, column=0)
 selected_file_display.grid(row=0, column=1)
@@ -199,7 +255,7 @@ num_sigs.grid(row=2, column=0)
 enter_num_sigs.grid(row=2, column=1)
 start.grid(row=3, column=1)
 progress.grid(row=3, column=2)
-kwit.grid(row=4, column=0)
+#kwit.grid(row=4, column=0)
 #endregion
 
 window.mainloop()
