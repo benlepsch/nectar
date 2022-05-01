@@ -185,17 +185,7 @@ def do_signage():
 # --------------------------------------
 # GRAPHICS
 
-''' GUI outline
 
-    selected file:      ______________      |browse|
-    output filename:    ______________
-    # of signatures:    ______________
-                        |begin|             Progress: loading file/modifying file/done
-    Set pen height:     ______________
-    |Home machine|      |Estop|             |cycle start|
-    |Card feed forward| |C.F. backward|     |cycle stop|
-    |quit|              |start signing|
-'''
 #region graphics stuff
 selected_file = Label(window, text='Selected file:')
 selected_file_display = Text(window, height=1, width=60)
@@ -214,6 +204,7 @@ set_pen_height = Label(window, text='Set pen height (mm):')
 sph_amt = StringVar(value='5')
 sph_input = Entry(window, textvariable=sph_amt, width=20)
 
+#region shitter functions
 def homeit():
     ser.write(b'$H\n')
 
@@ -235,6 +226,7 @@ def cyclestopit():
     global cst, pause
     cst = True
     pause = True
+#endregion
 
 home_button = Button(window, text='Home machine', command=homeit)
 e_stop = Button(window, text='Emergency Stop', command=estopit)
@@ -245,6 +237,17 @@ cycle_stop = Button(window, text='Stop cycle', command=cyclestopit)
 
 start_sign = Button(window, text='Start', command=do_signage)
 
+''' GUI outline
+
+    selected file:      ______________      |browse|
+    output filename:    ______________
+    # of signatures:    ______________
+                        |begin|             Progress: loading file/modifying file/done
+    Set pen height:     ______________
+    |Home machine|      |Estop|             |cycle start|
+    |Card feed forward| |C.F. backward|     |cycle stop|
+    |quit|              |start signing|
+'''
 
 selected_file.grid(row=0, column=0)
 selected_file_display.grid(row=0, column=1)
@@ -255,7 +258,16 @@ num_sigs.grid(row=2, column=0)
 enter_num_sigs.grid(row=2, column=1)
 start.grid(row=3, column=1)
 progress.grid(row=3, column=2)
-#kwit.grid(row=4, column=0)
+set_pen_height.grid(row=4, column=0)
+sph_input.grid(row=4,column=1)
+home_button.grid(row=5,column=0)
+e_stop.grid(row=5,column=1)
+cf_forward.grid(row=6,column=0)
+cf_backward.grid(row=6,column=1)
+cycle_start.grid(row=5,column=2)
+cycle_stop.grid(row=6,column=2)
+start_sign.grid(row=7,column=1)
+kwit.grid(row=7, column=0)
 #endregion
 
 window.mainloop()
