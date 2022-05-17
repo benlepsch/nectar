@@ -13,11 +13,12 @@ from tkinter import *
 from tkinter import filedialog
 from svg_to_gcode.svg_parser import parse_file
 from svg_to_gcode.compiler import Compiler, interfaces
-import os, sys, serial, time
+import os, sys, serial
+from time import sleep
 import RPi.GPIO as g
 from RpiMotorLib import RpiMotorLib
 
-g.setmode(g.BOARD)
+g.setmode(g.BCM)
 
 window = Tk()
 window.title('SVG to Gcode convertir')
@@ -140,6 +141,68 @@ def file_explorer():
 
 # --------------------------------------
 # CONTORL ARDUINO
+
+#region Setup stepper control things
+SPR = 200 # steps per revolution (we will prolly use 8th steps so multiply by 8)
+RES = {'Full': (0, 0, 0),
+        'Half': (1, 0, 0),
+        '1/4': (0, 1, 0),
+        '1/8': (1, 1, 0),
+        '1/16': (0, 0, 1),
+        '1/32': (1, 0, 1)}
+delay = 0.00002
+
+dir1 = 20
+step1 = 21
+mode1 = (14, 15, 18)
+
+dir2 = 16
+step2 = 19
+mode2 = (17, 27, 22)
+
+g.setup(mode1, g.OUT)
+g.setup(mode2, g.OUT)
+
+g.output(mode1, RES['1/8'])
+g.output(mode2, RES['1/8'])
+
+g.setup(dir1, g.OUT)
+g.setup(dir2, g.OUT)
+g.setup(step1, g.OUT)
+g.setup(step2, g.OUT)
+#endregion
+
+# CARD FEED STEPPER CONTROL FUNCTIONS
+def turn_both(dir, step_count): # direction = 1 for clockwise, 0 counterclockwise
+    # set direction for both motors
+
+    g.output(dir1, dir)
+    g.output(dir2, dir)
+
+    for x in range(step_count * 8): # multiply by 8 bcause 8th steps
+        g.output(step1, g.HIGH)
+        g.output(step2, g.HIGH)
+        sleep(delay)
+        g.output(step1, g.LOW)
+        g.output(step2, g.LOW)
+        sleep(delay)
+
+def turn_one(dir, step_count):
+    g.output(dir1, dir)
+    for x in range(step_count * 8): # multiply by 8 bcause 8th steps
+        g.output(step1, g.HIGH)
+        sleep(delay)
+        g.output(step1, g.LOW)
+        sleep(delay)
+
+def turn_two(dir, step_count):
+    g.output(dir2, dir)
+    for x in range(step_count * 8): # multiply by 8 bcause 8th steps
+        g.output(step2, g.HIGH)
+        sleep(delay)
+        g.output(step2, g.LOW)
+        sleep(delay)
+
 ser = ''
 pause = False
 cst = False
@@ -172,6 +235,8 @@ def do_signage():
             if not cst2:
                 ser.write(b'!\n') # pause to run stepper code
                 # run stepper code here
+                # ex:
+                # turn_both(1, 400)
                 ser.write(b'~\n') # resume
             else: 
                 cst2 = False
