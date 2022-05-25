@@ -204,42 +204,34 @@ def turn_two(dir, step_count):
         sleep(delay)
 
 ser = ''
-pause = False
 cst = False
-cst2 = False
+
 def do_signage():
-    global ser, pause, cst, cst2
+    global ser, cst, nsv
     # TODO: read in gfile from StringVar
     gfile = ''
     ser = serial.Serial('dev/ttyACM0', 115200, timeout=1)
     time.sleep(1)
     ser.reset_input_buffer()
-
+    nd = nsv
     with open(gfile) as f:
-        for i in range(nsv):
+        for i in range(nd):
             for line in f:
                 ser.write((line + '\n').encode('ascii'))
                 # maybe need a delay here to wait for the 
                 # machine to move
                 if cst:
-                    break
-            while (pause):
-                if cst:
-                    cst = False
-                if cst2:
-                    pause = False
-
+                    return 0
+                
             # im not sure if we need the ~ and ! commands
             # if it's not being sent any commands while
             # the stepper code is running anyway
-            if not cst2:
-                ser.write(b'!\n') # pause to run stepper code
-                # run stepper code here
-                # ex:
-                # turn_both(1, 400)
-                ser.write(b'~\n') # resume
-            else: 
-                cst2 = False
+            nsv = nsv - 1;
+            ser.write(b'!\n') # pause to run card feeder code
+            # run stepper code here
+            # turn_both(1, 400)
+            ser.write(b'~\n') # resume
+    # ser.close() do we need this?
 
 
 
@@ -273,19 +265,22 @@ def estopit():
 
 # TODO: add these these commands
 def cffit():
+    # turn_both(0, 200)
     pass
 
 def cfbit():
+    # turn_both(0, 200)
     pass
 
 def cyclestartit():
-    global cst2
-    cst2 = True
+    global cst
+    if cst:
+        cst = False
+        do_signage()
 
 def cyclestopit():
-    global cst, pause
+    global cst
     cst = True
-    pause = True
 #endregion
 
 home_button = Button(window, text='Home machine', command=homeit)
